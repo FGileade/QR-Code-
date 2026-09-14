@@ -1,4 +1,5 @@
 .versiculo-banner {
+  display: none;
   position: fixed;
   left: 20px;
   bottom: 20px;
@@ -42,6 +43,8 @@
   color: inherit;
   opacity: 0.6;
   transition: opacity 0.2s ease;
+  min-width: 44px;
+  min-height: 44px;
 }
 
 #fechar-versiculo:hover {
@@ -70,4 +73,25 @@
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+@media (max-width: 600px) {
+  .versiculo-banner {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    width: auto;
+    max-width: none;
+    padding: 16px;
+    border-radius: 16px;
+  }
+
+  #versiculo-texto {
+    font-size: 17px;
+    line-height: 1.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .versiculo-banner { animation: none; }
 }

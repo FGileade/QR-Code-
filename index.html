@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de QR Code com logotipo</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #12151B;
+    --paper: #F1EFE9;
+    --paper-2: #E6E1D4;
+    --ink: #14171C;
+    --muted: #6B6F76;
+    --accent: #E8A33D;
+    --accent-hover: #D6922E;
+    --accent-ink: #12151B;
+    --error: #B3452E;
+    --line: rgba(20, 23, 27, 0.22);
+    --font-display: Georgia, 'Iowan Old Style', 'Palatino Linotype', serif;
+    --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: var(--bg);
+    font-family: var(--font-body);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .ticket {
+    position: relative;
+    overflow: hidden;
+    width: 100%;
+    max-width: 400px;
+    background: var(--paper);
+    border-radius: 16px;
+  }
+
+  .ticket__stripe {
+    height: 6px;
+    background: var(--accent);
+  }
+
+  .ticket__inner {
+    padding: 28px 26px 26px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-size: 26px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    line-height: 1.2;
+  }
+
+  .subtitle {
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--muted);
+    margin: 0 0 22px;
+    max-width: 34ch;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+
+  .hint {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 5px;
+  }
+
+  select,
+  input[type="text"],
+  input[type="email"] {
+    width: 100%;
+    padding: 11px 12px;
+    font-size: 15px;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: #FFFFFF;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+
+  select:focus-visible,
+  input:focus-visible,
+  button:focus-visible,
+  input[type="range"]:focus-visible {
+    outline: 2px solid var(--accent-hover);
+    outline-offset: 2px;
+  }
+
+  .logo-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  input[type="file"] {
+    flex: 1;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  input[type="file"]::file-selector-button {
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 12px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 7px;
+    background: var(--ink);
+    color: var(--paper);
+    cursor: pointer;
+  }
+
+  input[type="file"]::file-selector-button:hover {
+    background: #2A2F38;
+  }
+
+  .logo-preview {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--line);
+    flex-shrink: 0;
+  }
+
+  .logo-remove {
+    font-size: 12px;
+    color: var(--error);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+    flex-shrink: 0;
+  }
+
+  .size-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  input[type="range"] {
+    flex: 1;
+    accent-color: var(--accent);
+  }
+
+  .size-value {
+    font-size: 13px;
+    color: var(--muted);
+    min-width: 52px;
+    text-align: right;
+  }
+
+  .error-msg {
+    font-size: 13px;
+    color: var(--error);
+    margin: -6px 0 14px;
+  }
+
+  .error-msg[hidden] { display: none; }
+
+  .generate-btn {
+    width: 100%;
+    padding: 13px;
+    font-size: 15px;
+    font-weight: 700;
+    font-family: var(--font-body);
+    color: var(--accent-ink);
+    background: var(--accent);
+    border: none;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+  }
+
+  .generate-btn:hover { background: var(--accent-hover); }
+
+  .perforation {
+    position: relative;
+    margin: 24px -26px;
+    border-top: 2px dashed var(--line);
+  }
+
+  .perforation::before,
+  .perforation::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--bg);
+    transform: translateY(-50%);
+  }
+
+  .perforation::before { left: -13px; }
+  .perforation::after { right: -13px; }
+
+  .stub {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .qr-placeholder {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-width: 260px;
+    border: 1.5px dashed var(--line);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    font-size: 13px;
+    color: var(--muted);
+    background: var(--paper-2);
+  }
+
+  .qr-result {
+    width: 100%;
+  }
+
+  .qr-result[hidden] { display: none; }
+
+  .qr-result canvas {
+    width: 100%;
+    max-width: 260px;
+    height: auto;
+    border-radius: 10px;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .qr-caption {
+    font-family: var(--font-body);
+    font-size: 12px;
+    color: var(--muted);
+    margin: 12px 0 14px;
+    word-break: break-all;
+  }
+
+  .download-btn {
+    display: inline-block;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: var(--font-body);
+    color: var(--ink);
+    background: transparent;
+    border: 1.5px solid var(--ink);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 150ms ease, color 150ms ease;
+  }
+
+  .download-btn:hover {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .qr-result.show {
+      animation: reveal 320ms ease-out;
+    }
+  }
+
+  @keyframes reveal {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ticket">
+  <div class="ticket__stripe"></div>
+  <div class="ticket__inner">
+
+    <h1>Gerador de QR Code</h1>
+    <p class="subtitle">Adicione um link, e-mail ou perfil do Instagram e gere um código com seu logotipo no centro.</p>
+
+    <div class="field">
+      <label for="type">O que o código vai abrir</label>
+      <select id="type">
+        <option value="link">Link</option>
+        <option value="email">E-mail</option>
+        <option value="instagram">Instagram</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="content" id="contentLabel">Endereço do link</label>
+      <input type="text" id="content" placeholder="https://seusite.com">
+      <p class="hint" id="contentHint">Cole o endereço completo, com https://.</p>
+    </div>
+
+    <div class="field">
+      <label for="logo">Logotipo (opcional)</label>
+      <div class="logo-row">
+        <input type="file" id="logo" accept="image/*">
+        <img id="logoPreview" class="logo-preview" alt="Prévia do logotipo" hidden>
+        <button type="button" id="logoRemove" class="logo-remove" hidden>Remover</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="size">Tamanho</label>
+      <div class="size-row">
+        <input type="range" id="size" min="200" max="600" step="10" value="320">
+        <span class="size-value" id="sizeLabel">320 px</span>
+      </div>
+    </div>
+
+    <p class="error-msg" id="errorMsg" hidden></p>
+
+    <button type="button" class="generate-btn" id="generateBtn">Gerar QR Code</button>
+
+    <div class="perforation"></div>
+
+    <div class="stub">
+      <div class="qr-placeholder" id="qrPlaceholder">Seu código aparece aqui depois de gerar.</div>
+      <div class="qr-result" id="qrResult" hidden>
+        <canvas id="qrCanvas"></canvas>
+        <p class="qr-caption" id="qrCaption"></p>
+        <button type="button" class="download-btn" id="downloadBtn">Baixar PNG</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const typeSelect = document.getElementById('type');
+  const contentInput = document.getElementById('content');
+  const contentLabel = document.getElementById('contentLabel');
+  const contentHint = document.getElementById('contentHint');
+  const logoInput = document.getElementById('logo');
+  const logoPreview = document.getElementById('logoPreview');
+  const logoRemove = document.getElementById('logoRemove');
+  const sizeSlider = document.getElementById('size');
+  const sizeLabel = document.getElementById('sizeLabel');
+  const errorMsg = document.getElementById('errorMsg');
+  const generateBtn = document.getElementById('generateBtn');
+  const qrPlaceholder = document.getElementById('qrPlaceholder');
+  const qrResult = document.getElementById('qrResult');
+  const qrCaption = document.getElementById('qrCaption');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  let logoImage = null;
+
+  const fieldConfig = {
+    link: {
+      label: 'Endereço do link',
+      placeholder: 'https://seusite.com',
+      hint: 'Cole o endereço completo, com https://.',
+      inputType: 'text'
+    },
+    email: {
+      label: 'Endereço de e-mail',
+      placeholder: 'seuemail@exemplo.com',
+      hint: 'Ao escanear, o celular vai abrir um e-mail novo para esse endereço.',
+      inputType: 'email'
+    },
+    instagram: {
+      label: 'Usuário do Instagram',
+      placeholder: '@seuusuario',
+      hint: 'Adicionamos https://instagram.com/ automaticamente.',
+      inputType: 'text'
+    }
+  };
+
+  typeSelect.addEventListener('change', () => {
+    const cfg = fieldConfig[typeSelect.value];
+    contentLabel.textContent = cfg.label;
+    contentInput.placeholder = cfg.placeholder;
+    contentInput.type = cfg.inputType;
+    contentHint.textContent = cfg.hint;
+    contentInput.value = '';
+    hideError();
+  });
+
+  logoInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        logoImage = img;
+        logoPreview.src = ev.target.result;
+        logoPreview.hidden = false;
+        logoRemove.hidden = false;
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+
+  logoRemove.addEventListener('click', () => {
+    logoImage = null;
+    logoInput.value = '';
+    logoPreview.hidden = true;
+    logoRemove.hidden = true;
+  });
+
+  sizeSlider.addEventListener('input', () => {
+    sizeLabel.textContent = sizeSlider.value + ' px';
+  });
+
+  function showError(msg) {
+    errorMsg.textContent = msg;
+    errorMsg.hidden = false;
+  }
+
+  function hideError() {
+    errorMsg.hidden = true;
+  }
+
+  function buildContent(type, value) {
+    value = value.trim();
+    if (type === 'email') {
+      return 'mailto:' + value;
+    }
+    if (type === 'instagram') {
+      const handle = value
+        .replace(/^@/, '')
+        .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
+        .replace(/\/+$/, '');
+      return 'https://instagram.com/' + handle;
+    }
+    if (!/^https?:\/\//i.test(value)) {
+      value = 'https://' + value;
+    }
+    return value;
+  }
+
+  function generateQR(content) {
+    const levels = ['H', 'Q', 'M', 'L'];
+    for (const level of levels) {
+      for (let typeNumber = 1; typeNumber <= 40; typeNumber++) {
+        try {
+          const qr = qrcode(typeNumber, level);
+          qr.addData(content);
+          qr.make();
+          return qr;
+        } catch (e) {
+          // tenta o próximo tamanho ou nível
+        }
+      }
+    }
+    return null;
+  }
+
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function renderQR(content, logoImg, size) {
+    const qr = generateQR(content);
+    if (!qr) {
+      showError('Não foi possível gerar o QR Code para esse conteúdo.');
+      return false;
+    }
+
+    const moduleCount = qr.getModuleCount();
+    const quiet = 4;
+    const cell = size / (moduleCount + quiet * 2);
+
+    const canvas = document.getElementById('qrCanvas');
+    canvas.width = size;
+    canvas.height = size;
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fillRect(0, 0, size, size);
+
+    ctx.fillStyle = '#111111';
+    for (let row = 0; row < moduleCount; row++) {
+      for (let col = 0; col < moduleCount; col++) {
+        if (qr.isDark(row, col)) {
+          const x = Math.floor((col + quiet) * cell);
+          const y = Math.floor((row + quiet) * cell);
+          const w = Math.ceil(cell) + 1;
+          ctx.fillRect(x, y, w, w);
+        }
+      }
+    }
+
+    if (logoImg) {
+      const logoSize = size * 0.2;
+      const pad = logoSize * 0.16;
+      const cx = (size - logoSize) / 2;
+      const cy = (size - logoSize) / 2;
+      ctx.fillStyle = '#FFFFFF';
+      roundRect(ctx, cx - pad, cy - pad, logoSize + pad * 2, logoSize + pad * 2, 10);
+      ctx.fill();
+      ctx.drawImage(logoImg, cx, cy, logoSize, logoSize);
+    }
+
+    return true;
+  }
+
+  generateBtn.addEventListener('click', () => {
+    const raw = contentInput.value.trim();
+    if (!raw) {
+      showError('Adicione um link, e-mail ou usuário antes de gerar.');
+      return;
+    }
+    hideError();
+
+    const type = typeSelect.value;
+    const content = buildContent(type, raw);
+    const size = parseInt(sizeSlider.value, 10);
+
+    const ok = renderQR(content, logoImage, size);
+    if (!ok) return;
+
+    qrPlaceholder.hidden = true;
+    qrResult.hidden = false;
+    qrResult.classList.remove('show');
+    void qrResult.offsetWidth;
+    qrResult.classList.add('show');
+    qrCaption.textContent = content.length > 42 ? content.slice(0, 39) + '…' : content;
+  });
+
+  downloadBtn.addEventListener('click', () => {
+    const canvas = document.getElementById('qrCanvas');
+    const link = document.createElement('a');
+    link.download = 'qrcode.png';
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+</script>
+
+</body>
+</html>

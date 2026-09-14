@@ -347,7 +347,7 @@
   <div class="ticket__inner">
 
     <h1>Gerador de QR Code</h1>
-    <p class="subtitle">Adicione um link, e-mail ou perfil do Instagram e gere um código com seu logotipo no centro.</p>
+    <p class="subtitle">Adicione um link, e-mail, Instagram ou chave Pix e gere um código com seu logotipo no centro.</p>
 
     <div class="field">
       <label for="type">O que o código vai abrir</label>
@@ -355,6 +355,7 @@
         <option value="link">Link</option>
         <option value="email">E-mail</option>
         <option value="instagram">Instagram</option>
+        <option value="pix">Chave Pix</option>
       </select>
     </div>
 
@@ -453,6 +454,12 @@
       placeholder: '@seuusuario',
       hint: 'Adicionamos https://instagram.com/ automaticamente.',
       inputType: 'text'
+    },
+    pix: {
+      label: 'Chave Pix',
+      placeholder: 'CPF, telefone, e-mail ou chave aleatória',
+      hint: 'O QR Code conterá a chave Pix informada.',
+      inputType: 'text'
     }
   };
 
@@ -514,6 +521,9 @@
         .replace(/^https?:\/\/(www\.)?instagram\.com\//i, '')
         .replace(/\/+$/, '');
       return 'https://instagram.com/' + handle;
+    }
+    if (type === 'pix') {
+      return value;
     }
     if (!/^https?:\/\//i.test(value)) {
       value = 'https://' + value;
@@ -596,7 +606,7 @@
   generateBtn.addEventListener('click', () => {
     const raw = contentInput.value.trim();
     if (!raw) {
-      showError('Adicione um link, e-mail ou usuário antes de gerar.');
+      showError('Adicione um link, e-mail, usuário ou chave Pix antes de gerar.');
       return;
     }
     hideError();
